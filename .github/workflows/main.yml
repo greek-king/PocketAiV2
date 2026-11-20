@@ -1,3 +1,4 @@
+
 name: iOS build
 
 on:
@@ -10,12 +11,30 @@ on:
 jobs:
   build:
     runs-on: macos-15
+
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Locate Xcode project
+        id: project
+        run: |
+          PROJECT=$(find . -name "PocketAI.xcodeproj" -type d -print -quit)
+
+          if [ -z "$PROJECT" ]; then
+            echo "ERROR: PocketAI.xcodeproj was not found."
+            echo "Repository contents:"
+            find . -maxdepth 4 -print
+            exit 1
+          fi
+
+          echo "Found project: $PROJECT"
+          echo "path=$PROJECT" >> "$GITHUB_OUTPUT"
+
       - name: Build for iOS Simulator
         run: |
           xcodebuild \
-            -project PocketAI.xcodeproj \
+            -project "${{ steps.project.outputs.path }}" \
             -scheme PocketAI \
             -sdk iphonesimulator \
             -configuration Debug \
